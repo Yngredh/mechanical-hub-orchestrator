@@ -4,6 +4,10 @@ import com.fiap.mechanicalhub.orchestrator.application.ports.CommandPublisher
 import com.fiap.mechanicalhub.orchestrator.application.ports.OutboxMessage
 import com.fiap.mechanicalhub.orchestrator.application.ports.OutboxRelayStore
 import com.fiap.mechanicalhub.orchestrator.domain.enums.SagaCommandTypeEnum
+import com.fiap.mechanicalhub.orchestrator.logging.FlowFields
+import com.fiap.mechanicalhub.orchestrator.logging.FlowLog
+import com.fiap.mechanicalhub.orchestrator.logging.LogLevel
+import com.fiap.mechanicalhub.orchestrator.logging.Stage
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
@@ -31,17 +35,17 @@ class RelayOutboxUseCase(
         for (message in ordered) {
             MDC.put("orderId", message.orderId)
             MDC.put("eventId", message.eventId)
+            val command = SagaCommandTypeEnum.entries.firstOrNull { it.messageType == message.eventType }
             try {
-                val destination =
-                    SagaCommandTypeEnum.entries.firstOrNull { it.messageType == message.eventType }?.destination
-                        ?: error("Tipo de comando sem fila de destino: ${message.eventType}")
+                val destination = command?.destination ?: error("Tipo de comando sem fila de destino: ${message.eventType}")
                 publisher.publish(destination, message)
                 store.markSent(message.eventId, clock.instant())
+                logPublication(message, command, "Comando ${message.eventType} publicado na fila do ${destination.name.lowercase()}", null)
                 sent++
             } catch (
                 @Suppress("TooGenericExceptionCaught") e: Exception,
             ) {
-                log.warn("Falha ao publicar {} (orderId={}, seq={}): {}", message.eventType, message.orderId, message.seq, e.toString())
+                logPublication(message, command, "Falha ao publicar comando ${message.eventType}, nova tentativa no proximo ciclo", e)
                 store.markFailed(message.eventId, e.toString().take(MAX_ERROR_LENGTH))
                 break
             } finally {
@@ -50,6 +54,25 @@ class RelayOutboxUseCase(
             }
         }
         return sent
+    }
+
+    /** Publicacao pelo relay (logging-standard §4): `status` do comando, para o filtro da etapa mostrar o envio. */
+    private fun logPublication(
+        message: OutboxMessage,
+        command: SagaCommandTypeEnum?,
+        msg: String,
+        failure: Exception?,
+    ) {
+        val fields =
+            FlowFields(
+                orderId = message.orderId,
+                status = command?.step,
+                msg = msg,
+                stage = if (failure != null) Stage.FAIL else null,
+                context = listOf("eventType" to message.eventType, "seq" to message.seq, "relayAttempts" to message.attempts),
+                error = failure,
+            )
+        FlowLog.write(log, if (failure != null) LogLevel.WARN else LogLevel.INFO, fields)
     }
 
     companion object {

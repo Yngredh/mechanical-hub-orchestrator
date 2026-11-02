@@ -42,6 +42,7 @@
                         <omitEmptyFields>true</omitEmptyFields>
                         <pattern>
                             {
+                              "service": "mechanical-hub-orchestrator",
                               "service_name": "${applicationName:-mechanical-hub-orchestrator}",
                               "environment": "${environment:-production}",
                               "trace_id": "%mdc{trace_id:-}",

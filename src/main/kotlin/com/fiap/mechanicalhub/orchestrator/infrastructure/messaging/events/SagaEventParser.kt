@@ -17,7 +17,7 @@ class InvalidMessageException(
 /** Converte o corpo JSON (envelope + payload no mesmo nivel) no evento de dominio, escolhendo o contrato pelo `type`. */
 @Component
 class SagaEventParser(
-    jsonMapper: JsonMapper,
+    private val jsonMapper: JsonMapper,
 ) {
     private val reader = jsonMapper.readerFor(EventMessage::class.java).with(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
 
@@ -36,4 +36,13 @@ class SagaEventParser(
             }
         return IncomingSagaEvent(message.eventId, event)
     }
+
+    /** Campo texto do envelope sem validar o contrato (null se ausente ou ilegivel); usado nos logs. */
+    fun fieldOrNull(
+        body: String,
+        field: String,
+    ): String? =
+        runCatching { jsonMapper.readTree(body).get(field)?.takeIf { it.isString }?.asString() }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
 }
