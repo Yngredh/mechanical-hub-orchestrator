@@ -4,15 +4,6 @@ import com.fiap.mechanicalhub.orchestrator.domain.enums.SagaStatusEnum
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Component
 
-/** Resultado do processamento de uma mensagem (label `outcome` de `saga_messages_total`). */
-enum class MessageOutcome {
-    APPLIED,
-    DISCARDED_STEP_GUARD,
-    DUPLICATE,
-    RETRY,
-    DEAD_LETTER,
-}
-
 /**
  * Contadores da saga: `saga_started_total`, `saga_finished_total{status}` e
  * `saga_messages_total{type, outcome}`. Os nomes sao o contrato com o painel

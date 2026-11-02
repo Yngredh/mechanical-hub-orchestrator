@@ -8,12 +8,6 @@ import tools.jackson.core.JacksonException
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
 
-/** Mensagem fora do contrato (JSON invalido, `type` desconhecido, campo ausente ou valor invalido): erro permanente. */
-class InvalidMessageException(
-    message: String,
-    cause: Throwable? = null,
-) : RuntimeException(message, cause)
-
 /** Converte o corpo JSON (envelope + payload no mesmo nivel) no evento de dominio, escolhendo o contrato pelo `type`. */
 @Component
 class SagaEventParser(

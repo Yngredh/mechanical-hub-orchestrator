@@ -14,13 +14,6 @@ import org.springframework.dao.NonTransientDataAccessException
 import org.springframework.dao.RecoverableDataAccessException
 import org.springframework.dao.TransientDataAccessException
 
-enum class EventErrorClass {
-    /** `E11000` em `messageKey` numa corrida: a mensagem ja foi processada (nao e erro). */
-    DUPLICATE,
-    TRANSIENT,
-    PERMANENT,
-}
-
 /**
  * Classificacao de failure_handling.md §1 para o consumidor do orquestrador.
  * Transitorio: `TransientTransactionError`, `UnknownTransactionCommitResult`,

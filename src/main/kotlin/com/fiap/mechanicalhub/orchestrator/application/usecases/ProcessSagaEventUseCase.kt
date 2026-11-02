@@ -4,32 +4,10 @@ import com.fiap.mechanicalhub.orchestrator.application.ports.OutboxPort
 import com.fiap.mechanicalhub.orchestrator.application.ports.TransactionHistoryEntry
 import com.fiap.mechanicalhub.orchestrator.application.ports.TransactionHistoryPort
 import com.fiap.mechanicalhub.orchestrator.domain.enums.TransactionOutcomeEnum
-import com.fiap.mechanicalhub.orchestrator.domain.model.SagaAdvance
-import com.fiap.mechanicalhub.orchestrator.domain.model.SagaEvent
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
-
-/** Evento recebido da fila, ja convertido; `eventId` e o `messageKey` da deduplicacao. */
-data class IncomingSagaEvent(
-    val eventId: UUID,
-    val event: SagaEvent,
-)
-
-sealed interface SagaEventOutcome {
-    data class Applied(
-        val advance: SagaAdvance,
-    ) : SagaEventOutcome
-
-    data class Discarded(
-        val result: SagaStepResult.Discarded,
-    ) : SagaEventOutcome
-
-    /** `messageKey` ja registrado na `transaction_history`: nada e reaplicado. */
-    data object Duplicate : SagaEventOutcome
-}
 
 /**
  * Pipeline transacional de cada mensagem (spec secao 3, TD_finishedOS §0.4),

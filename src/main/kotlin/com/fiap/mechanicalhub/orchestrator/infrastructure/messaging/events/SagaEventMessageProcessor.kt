@@ -14,23 +14,6 @@ import com.fiap.mechanicalhub.orchestrator.logging.FlowStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-/** O que o listener faz com a mensagem depois do processamento. */
-sealed interface EventDecision {
-    /** `commitTransaction` feito, duplicata ou descarte pela guarda: apagar a mensagem. */
-    data object Acknowledge : EventDecision
-
-    /** Erro transitorio: nao apagar; nova tentativa apos `delaySeconds`. */
-    data class Retry(
-        val delaySeconds: Int,
-        val error: Throwable,
-    ) : EventDecision
-
-    /** Erro permanente: enviar a DLQ e apagar da fila de origem. */
-    data class DeadLetter(
-        val error: Throwable,
-    ) : EventDecision
-}
-
 /**
  * Parse -> caso de uso (transacao) -> decisao, isolado do SDK para ser testado
  * sem SQS. Retry bloqueante por `ApproximateReceiveCount`: 1 s, 2 s, 4 s, 8 s,
