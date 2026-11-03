@@ -5,8 +5,3 @@ enum class PaymentFailureReasonEnum {
     EXPIRED,
     FAILED,
 }
-
-/** Motivo enviado no `cancelOrder` (TD_paymentFailed F4). */
-enum class CancelOrderReasonEnum {
-    PAYMENT_NOT_CONFIRMED,
-}

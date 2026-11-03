@@ -1,12 +1,5 @@
 package com.fiap.mechanicalhub.orchestrator.domain.enums
 
-/** Servico que recebe o comando; define a fila de destino no relay. */
-enum class CommandDestinationEnum {
-    ORDERS,
-    STOCK,
-    BILLING,
-}
-
 /**
  * Comandos publicados pelo orquestrador (spec secao 3, "Publica"). O nome da
  * constante e o `STEP` da `idempotencyKey = {transactionId}:{STEP}` e

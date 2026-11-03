@@ -1,9 +1,14 @@
 package com.fiap.mechanicalhub.orchestrator.infrastructure.messaging.events
 
+import com.fiap.mechanicalhub.orchestrator.logging.FlowFields
+import com.fiap.mechanicalhub.orchestrator.logging.FlowLog
+import com.fiap.mechanicalhub.orchestrator.logging.LogLevel
+import com.fiap.mechanicalhub.orchestrator.logging.Stage
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.awspring.cloud.sqs.listener.SqsHeaders
 import io.awspring.cloud.sqs.listener.Visibility
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
@@ -40,7 +45,32 @@ class SagaEventListener(
             is EventDecision.DeadLetter -> {
                 deadLetterPublisher.publish(message, decision.error)
                 acknowledgement.acknowledge()
+                logDeadLetter(message, receiveCount, decision.error)
             }
         }
+    }
+
+    /** `MessageGroupId` e o `orderId`: a linha da DLQ tambem aparece no filtro pela ordem. */
+    private fun logDeadLetter(
+        message: Message<String>,
+        receiveCount: Int,
+        error: Throwable,
+    ) {
+        FlowLog.write(
+            log,
+            LogLevel.ERROR,
+            FlowFields(
+                orderId = message.headers[SqsHeaders.MessageSystemAttributes.SQS_MESSAGE_GROUP_ID_HEADER]?.toString(),
+                status = processor.statusOf(message.payload),
+                msg = "Evento enviado para a DLQ",
+                stage = Stage.FAIL,
+                attempt = receiveCount,
+                error = error,
+            ),
+        )
+    }
+
+    private companion object {
+        val log = LoggerFactory.getLogger(SagaEventListener::class.java)
     }
 }

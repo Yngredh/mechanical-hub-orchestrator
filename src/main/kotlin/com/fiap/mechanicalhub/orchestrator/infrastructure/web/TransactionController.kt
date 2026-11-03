@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import java.math.BigDecimal
-import java.time.Instant
 import java.util.UUID
 
 /** Consulta operacional interna (depuracao e demonstracao); nao e endpoint publico. */
@@ -50,52 +48,6 @@ class TransactionController(
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
     fun invalidOrderId(): ResponseEntity<Void> = ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
 }
-
-data class TransactionResponse(
-    val transaction: SagaResponse,
-    val history: List<HistoryResponse>,
-)
-
-data class SagaResponse(
-    val transactionId: UUID,
-    val orderId: UUID,
-    val status: String,
-    val currentStep: String?,
-    val seq: Long,
-    val repairs: List<UUID>,
-    val reservedMaterials: List<ReservedMaterialResponse>,
-    val budget: BudgetResponse?,
-    val payment: PaymentResponse?,
-    val createdAt: Instant,
-    val updatedAt: Instant,
-    val finishedAt: Instant?,
-)
-
-data class ReservedMaterialResponse(
-    val materialId: UUID,
-    val quantity: Int,
-)
-
-data class BudgetResponse(
-    val budgetId: UUID,
-    val orderCost: BigDecimal,
-)
-
-data class PaymentResponse(
-    val link: String?,
-    val expiresAt: Instant?,
-    val paymentId: String?,
-)
-
-data class HistoryResponse(
-    val seq: Long?,
-    val messageType: String,
-    val messageKey: String,
-    val stepBefore: String?,
-    val stepAfter: String?,
-    val outcome: String,
-    val receivedAt: Instant,
-)
 
 private fun Saga.toResponse() =
     SagaResponse(
