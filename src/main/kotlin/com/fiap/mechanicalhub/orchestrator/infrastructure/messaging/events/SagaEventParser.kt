@@ -36,7 +36,12 @@ class SagaEventParser(
         body: String,
         field: String,
     ): String? =
-        runCatching { jsonMapper.readTree(body).get(field)?.takeIf { it.isString }?.asString() }
-            .getOrNull()
+        runCatching {
+            jsonMapper
+                .readTree(body)
+                .get(field)
+                ?.takeIf { it.isString }
+                ?.asString()
+        }.getOrNull()
             ?.takeIf { it.isNotBlank() }
 }
