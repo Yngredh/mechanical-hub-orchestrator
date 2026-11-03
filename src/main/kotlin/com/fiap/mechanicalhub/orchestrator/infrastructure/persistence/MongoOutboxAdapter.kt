@@ -12,7 +12,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * `outbox_events` (TD_finishedOS §0.2): um documento `PENDING` por comando,
+ * `outbox_events` (td_finished_os §0.2): um documento `PENDING` por comando,
  * `_id = eventId` novo e `seq` reservado na saga. O `payload` ja e o corpo
  * JSON do contrato publicado pelo relay.
  */

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
 import java.time.Clock
 
 /**
- * Relay da outbox (TD_finishedOS §0.2): publica o lote de `PENDING` mais antigos.
+ * Relay da outbox (td_finished_os §0.2): publica o lote de `PENDING` mais antigos.
  * Por `orderId` a ordem e crescente em `seq` e um `seq` so sai depois de o
  * anterior ter sido enviado. Um erro interrompe o lote inteiro, registrando
  * `attempts` e `lastError`; o mesmo comando e retentado no proximo ciclo.

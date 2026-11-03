@@ -10,7 +10,7 @@ import java.time.Clock
 import java.time.Instant
 
 /**
- * Pipeline transacional de cada mensagem (spec secao 3, TD_finishedOS §0.4),
+ * Pipeline transacional de cada mensagem (spec secao 3, td_finished_os §0.4),
  * numa unica transacao multi-documento: deduplicacao por `messageKey` ->
  * handler (guarda de passo + atualizacao da saga) -> `transaction_history` ->
  * `outbox_events` -> `commitTransaction`. Descarte pela guarda grava so o
