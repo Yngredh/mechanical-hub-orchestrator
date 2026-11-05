@@ -84,7 +84,7 @@ MongoDB, porque cada saga é um documento que cresce a cada passo e as transaç�
 
 ![Relatório JaCoCo](docs/assets/coverage-report.png)
 
-Última execução local do JaCoCo (2026-11-02): **95,4% de linhas** e 88,1% de branches. Meta: ≥ 80% (o build falha abaixo disso). O BDD (`src/test/resources/features/saga.feature`) cobre caminho feliz, pendência de estoque, orçamento recusado, pagamento não confirmado, duplicatas e mensagens fora de ordem; relatório em `target/cucumber-report/cucumber.html`.
+Relatório JaCoCo da última execução completa de `verify` (2026-11-02): **95,7% de linhas** e 88,1% de branches. Meta: ≥ 80% (o build falha abaixo disso). O BDD (`src/test/resources/features/saga.feature`) cobre caminho feliz, pendência de estoque, orçamento recusado, pagamento não confirmado, duplicatas e mensagens fora de ordem; relatório em `target/cucumber-report/cucumber.html`.
 
 ## CI/CD
 
