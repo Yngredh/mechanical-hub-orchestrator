@@ -1,0 +1,27 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial","primaryColor":"#EAF2FB","primaryBorderColor":"#2F6DB5","primaryTextColor":"#1B1B1B","lineColor":"#44546A","clusterBkg":"#F7F9FC","clusterBorder":"#9AA9BC"}}}%%
+flowchart TD
+    U(["Run workflow<br/>Deploy completo<br/>(mechanical-hub-infra)"]):::start
+    I["① infra<br/>VPC, EKS, ECR, NLB,<br/>filas SQS + DLQs,<br/>observabilidade"]:::stage
+    D["② database<br/>RDS PostgreSQL ×3<br/>(orders, stock, billing)<br/>MongoDB no EKS<br/>(orchestrator)"]:::stage
+
+    subgraph S["③ serviços em paralelo"]
+        direction LR
+        O["orders<br/>build → ECR →<br/>kubectl apply →<br/>smoke test"]:::svc
+        B["billing<br/>build → ECR →<br/>kubectl apply →<br/>smoke test"]:::svc
+        K["stock<br/>build → ECR →<br/>kubectl apply →<br/>smoke test"]:::svc
+        R["orchestrator<br/>build → ECR →<br/>kubectl apply →<br/>smoke test"]:::svc
+    end
+
+    A["④ auth<br/>Lambdas + API Gateway<br/>smoke test pelo gateway"]:::stage
+    F(["Ambiente completo<br/>no ar"]):::done
+
+    U --> I
+    I -- "ate_etapa = infra<br/>termina aqui" --> D
+    D -- "ate_etapa = database<br/>termina aqui" --> S
+    S --> A
+    A --> F
+
+    classDef start fill:#FFF4D6,stroke:#C98A00,color:#1B1B1B
+    classDef stage fill:#EAF2FB,stroke:#2F6DB5,color:#1B1B1B
+    classDef svc fill:#E6F4EA,stroke:#2E7D32,color:#1B1B1B
+    classDef done fill:#E6F4EA,stroke:#2E7D32,color:#1B1B1B,stroke-width:2px
