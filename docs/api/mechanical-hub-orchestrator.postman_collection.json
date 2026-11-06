@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "mechanical-hub-orchestrator",
+    "description": "Consulta operacional e actuator do orquestrador da saga. O serviço não expõe API de negócio e não passa pelo API Gateway (é dirigido por mensagens SQS). No cluster o acesso é por port-forward (Service NodePort 30083, deployment mechanical-hub-orchestrator no namespace production):\n\nkubectl port-forward -n production deployment/mechanical-hub-orchestrator 8080:8080\n\nLocalmente: ./mvnw spring-boot:run -Dspring-boot.run.profiles=local (porta 8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "orderId",
+      "value": "3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b"
+    }
+  ],
+  "item": [
+    {
+      "name": "Transação",
+      "item": [
+        {
+          "name": "Consultar saga da ordem",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('saga com os campos principais', () => {",
+                  "  pm.expect(body.transaction.orderId).to.eql(pm.collectionVariables.get('orderId'));",
+                  "  pm.expect(body.transaction).to.include.keys('transactionId', 'status', 'currentStep', 'seq', 'repairs', 'reservedMaterials', 'createdAt', 'updatedAt');",
+                  "  pm.expect(body.transaction.status).to.be.oneOf(['STARTED', 'COMPLETED', 'COMPENSATING', 'COMPENSATED']);",
+                  "});",
+                  "pm.test('histórico ordenado por seq', () => {",
+                  "  pm.expect(body.history).to.be.an('array').that.is.not.empty;",
+                  "  const seqs = body.history.map(h => h.seq);",
+                  "  pm.expect(seqs).to.eql([...seqs].sort((a, b) => a - b));",
+                  "  pm.expect(body.history[0]).to.include.keys('messageType', 'messageKey', 'stepBefore', 'stepAfter', 'outcome', 'receivedAt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": "Retorna a saga e o histórico (ordenado por seq). Exige uma saga existente: inicie uma enviando diagnosisCompleted para a fila local (orderId = valor da variável orderId):\n\nawslocal sqs send-message \\\n  --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/mechanical-hub-orchestrator-events.fifo \\\n  --message-group-id 3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b \\\n  --message-deduplication-id $(uuidgen) \\\n  --message-body '{\"eventId\":\"d4e5f6a7-b8c9-4d0e-9f1a-2b3c4d5e6f70\",\"orderId\":\"3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b\",\"type\":\"diagnosisCompleted\",\"version\":1,\"timestamp\":\"2026-11-06T14:00:00Z\",\"repairs\":[{\"repairId\":\"0b8f5c3a-2d1e-4f7a-8c6b-9e5d4a3b2c1d\"}]}'",
+            "url": {
+              "raw": "{{baseUrl}}/transaction/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaction",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Saga em andamento",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/transaction/{{orderId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "{{orderId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"transaction\": {\n    \"transactionId\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\n    \"orderId\": \"3f2b8c1e-5d4a-4e6f-9a7b-1c2d3e4f5a6b\",\n    \"status\": \"STARTED\",\n    \"currentStep\": \"GENERATE_BUDGET\",\n    \"seq\": 2,\n    \"repairs\": [\n      \"0b8f5c3a-2d1e-4f7a-8c6b-9e5d4a3b2c1d\"\n    ],\n    \"reservedMaterials\": [\n      {\n        \"materialId\": \"99370d9f-1cbc-468d-8043-94588108b7c2\",\n        \"quantity\": 2\n      }\n    ],\n    \"budget\": null,\n    \"payment\": null,\n    \"createdAt\": \"2026-11-06T14:00:00.123Z\",\n    \"updatedAt\": \"2026-11-06T14:00:01.456Z\",\n    \"finishedAt\": null\n  },\n  \"history\": [\n    {\n      \"seq\": 1,\n      \"messageType\": \"diagnosisCompleted\",\n      \"messageKey\": \"d4e5f6a7-b8c9-4d0e-9f1a-2b3c4d5e6f70\",\n      \"stepBefore\": null,\n      \"stepAfter\": \"RESERVE_STOCK\",\n      \"outcome\": \"APPLIED\",\n      \"receivedAt\": \"2026-11-06T14:00:00.123Z\"\n    },\n    {\n      \"seq\": 2,\n      \"messageType\": \"stockReserved\",\n      \"messageKey\": \"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d\",\n      \"stepBefore\": \"RESERVE_STOCK\",\n      \"stepAfter\": \"GENERATE_BUDGET\",\n      \"outcome\": \"APPLIED\",\n      \"receivedAt\": \"2026-11-06T14:00:01.456Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Ordem sem saga (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": "UUID aleatório, sem saga correspondente: responde 404 sem corpo.",
+            "url": {
+              "raw": "{{baseUrl}}/transaction/{{$guid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaction",
+                "{{$guid}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 - Ordem sem saga",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/transaction/{{$guid}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "{{$guid}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "orderId inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": "orderId que não é UUID: responde 400 sem corpo.",
+            "url": {
+              "raw": "{{baseUrl}}/transaction/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaction",
+                "abc"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "400 - orderId inválido",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/transaction/abc",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "abc"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Actuator",
+      "item": [
+        {
+          "name": "Liveness",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Probe de liveness (só o estado da aplicação).",
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health/liveness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health",
+                "liveness"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Readiness (inclui MongoDB)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Probe de readiness; inclui readinessState e o MongoDB (503 se o banco cair).",
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health/readiness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health",
+                "readiness"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Métricas Prometheus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('contém saga_messages_total', () => pm.expect(pm.response.text()).to.include('saga_messages_total'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Métricas em texto Prometheus. O contador saga_messages_total só aparece depois da primeira mensagem processada: rode antes o envio do diagnosisCompleted.",
+            "url": {
+              "raw": "{{baseUrl}}/actuator/prometheus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "prometheus"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

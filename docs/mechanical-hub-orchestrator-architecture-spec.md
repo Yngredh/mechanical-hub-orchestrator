@@ -82,7 +82,7 @@ O serviço não expõe API de negócio. As rotas abaixo são operacionais e não
 | GET | `/actuator/prometheus` | Prometheus | — | Métricas |
 | GET | `/transaction/{orderId}` | Operação / demonstração | — | `200` com a saga e a `transaction_history` ordenada por `seq`; `404` sem saga; `400` com id inválido |
 
-Não há Swagger nem collection Postman: a única rota de consulta é a de depuração acima.
+Collection Postman: [api/mechanical-hub-orchestrator.postman_collection.json](api/mechanical-hub-orchestrator.postman_collection.json).
 
 ## 5. Interface assíncrona (mensagens)
 
