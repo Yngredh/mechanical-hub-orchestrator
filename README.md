@@ -64,7 +64,7 @@ Para simular os outros serviços, envie eventos direto à fila do LocalStack (`a
 | GET | `/transaction/{orderId}` | Saga + histórico da ordem (depuração; fora do API Gateway) |
 | GET | `/actuator/health/*`, `/actuator/prometheus` | Probes e métricas |
 
-Não expõe API de negócio. Detalhes em [Interface síncrona](docs/mechanical-hub-orchestrator-architecture-spec.md#4-interface-síncrona-rest).
+Não expõe API de negócio. Postman: [docs/api/mechanical-hub-orchestrator.postman_collection.json](docs/api/mechanical-hub-orchestrator.postman_collection.json)
 
 ## Mensagens
 
